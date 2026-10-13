@@ -6,6 +6,8 @@ const FISH={'Bluefin tuna':'Tuna','Yellowfin tuna':'Tuna','Wahoo':'Wahoo'};
 Object.keys(FISH).forEach(s=>$('#f-species').insertAdjacentHTML('beforeend',`<option>${esc(s)}</option>`));
 const speeds=[...new Set(L.map(l=>l.max_trolling_speed_kn).filter(x=>x!=null))].sort((a,b)=>a-b);
 speeds.forEach(s=>$('#f-speed').insertAdjacentHTML('beforeend',`<option value="${s}">${s} kn max or faster</option>`));
+const NL='<span class="null">Not listed by Nomad</span>',q=x=>x?esc(x):NL;
+const rig=l=>{const r=(window.RIGGING||{})[l.id]||{};return `<dl><dt>Hooks</dt><dd>${q(l.hooks_rings)}</dd><dt>Split rings</dt><dd>${q(r.split_rings)}</dd><dt>Tow point / eyelet</dt><dd>${q(r.tow_point)}</dd><dt>Leader</dt><dd>${q(r.leader)}</dd><dt>Swivels / snaps</dt><dd>${q(r.swivels_snaps)}</dd><dt>Hook swaps</dt><dd>${NL}</dd></dl>${r.notes&&r.notes.length?`<ul>${r.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}<p class="small"><a href="${esc(l.source_url)}" target="_blank" rel="noopener">Source: ${esc(l.source_url.replace('https://',''))}</a></p>`};
 const price=l=>l.price==null?null:`$${l.price.toFixed(2)} ${l.currency}`;
 function render(){const sp=$('#f-species').value,min=parseFloat($('#f-speed').value)||0;
  const r=L.filter(l=>(!sp||(l.target_species||[]).includes(FISH[sp]))&&(!min||(l.max_trolling_speed_kn||0)>=min));
@@ -21,7 +23,7 @@ function open(id){const l=L.find(x=>x.id===id);
  <dt>Action</dt><dd>${v(l.action)}</dd><dt>Trolling speed</dt><dd>${v(l.trolling_speed_text)}</dd><dt>Hooks</dt><dd>${v(l.hooks_rings)}</dd>
  <dt>Species named</dt><dd>${l.target_species?esc(l.target_species.join(', ')):v(null)}</dd></dl></div></div>
  <p class="eyebrow" style="margin-top:28px">${l.colors.length} colors offered</p><div class="colors">${l.colors.map(c=>`<span>${esc(c)}</span>`).join('')}</div>
- <a class="buy" href="${esc(l.product_url)}" target="_blank" rel="noopener">Buy from Nomad →</a>`;
+ <div class="rigging"><p class="eyebrow">Rigging (from Nomad's product page)</p>${rig(l)}</div><a class="buy" href="${esc(l.product_url)}" target="_blank" rel="noopener">Buy from Nomad →</a>`;
  $('#detail').hidden=false;document.body.style.overflow='hidden';}
 function close(){$('#detail').hidden=true;document.body.style.overflow='';}
 $('.close').onclick=close;$('#detail').onclick=e=>{if(e.target.id==='detail')close()};document.onkeydown=e=>{if(e.key==='Escape')close()};
