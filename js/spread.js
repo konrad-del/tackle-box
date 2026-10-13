@@ -1,4 +1,4 @@
-(function(){const D=window.LURE_DATA,L=D.lures,R=window.RIGGING||{},$=s=>document.querySelector(s);
+(function(){const D=window.LURE_DATA,L=D.lures,$=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const FISH={'Bluefin tuna':'Tuna','Yellowfin tuna':'Tuna','Wahoo':'Wahoo'};
 // Spec parsing (only from data.js fields)
@@ -66,16 +66,13 @@ function boat(rods){const n=rods.length,W=1000,cx=W/2,top=26,B=boatSVG(n,cx,top)
 
 Object.keys(FISH).forEach(f=>$('#s-fish').insertAdjacentHTML('beforeend',`<option>${esc(f)}</option>`));
 for(let i=1;i<=8;i++)$('#s-rods').insertAdjacentHTML('beforeend',`<option${i==4?' selected':''}>${i}</option>`);
-const rigLine=l=>{const r=R[l.id]||{},bits=[`Hooks: ${l.hooks_rings||'Not listed by Nomad'}`];
- bits.push(r.split_rings?'Heavy-duty split rings (per Nomad)':'Split rings: Not listed by Nomad');bits.push('Leader: '+(r.leader?'see Nomad note':'Not listed by Nomad'));
- return esc(bits.join(' · '))+` · <a href="${esc(l.product_url)}" target="_blank" rel="noopener">source</a>`};
 function run(){const fish=$('#s-fish').value,n=+$('#s-rods').value,k=+$('#s-speed').value,o=build(fish,n,k);window.lastSpread=o;$('#s-speed-val').textContent=k+' kn';
  if(!o.rods.length){$('#spread-out').innerHTML=`<p class="eyebrow">Suggested starting spread, rule of thumb from Nomad specs, not Nomad advice</p><h3 class="sp-h">No Nomad lure in this demo is rated for ${k} kn</h3><p class="muted">Trolling ranges in this demo run from ${SMIN} to ${SMAX} kn. Try another speed.</p>`;return}
  $('#spread-out').innerHTML=`<p class="eyebrow">Suggested starting spread, rule of thumb from Nomad specs, not Nomad advice</p>
  <h3 class="sp-h">${n} rod${n>1?'s':''} · ${esc(fish)} · ${k} kn · ${o.count} of ${L.length} lures rated for this speed</h3>
  <div class="sp-grid">${boat(o.rods)}<ol class="rods">${o.rods.map(r=>`<li><div class="rod-pos">${esc(r.pos[0])}</div>
  <button class="rod-lure" data-id="${r.l.id}">${esc(r.l.model)}</button> <span class="chip">${esc(r.col)}</span>
- <p class="muted">${esc(r.why)}</p><p class="rig">${rigLine(r.l)}</p></li>`).join('')}</ol></div>
+ <p class="muted">${esc(r.why)}</p></li>`).join('')}</ol></div>
  <p class="muted small">Colors: neutral rule (first color in Nomad's list not already used in this spread), not a claim about what works.</p>`;
  document.querySelectorAll('.rod-lure').forEach(b=>b.onclick=()=>window.openLure(b.dataset.id));}
 $('#s-fish').onchange=$('#s-rods').onchange=run;$('#s-speed').oninput=run;window.buildSpread=build;run();})();
