@@ -50,3 +50,5 @@ footer{background:var(--deep);color:rgba(247,245,240,.7);padding:40px 0;font-siz
 .sp-grid{grid-template-columns:1fr}.rods{display:grid;grid-template-columns:1fr 1fr;gap:4px 36px}.boatsvg .lab{font-size:14px}.boatsvg .fl{stroke-width:1.6}
 @media(max-width:700px){.rods{grid-template-columns:1fr}}
 .chip{white-space:nowrap;display:inline-block}
+input[type=range]{accent-color:var(--accent);width:240px;height:46px;margin:0}.sp-controls label b{color:var(--ocean)}
+@media(max-width:700px){input[type=range]{width:100%}}

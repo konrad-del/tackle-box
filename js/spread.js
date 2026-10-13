@@ -8,12 +8,10 @@ const len=l=>{const m=(l.length||'').match(/^(\d+)(?:-(\d+)\/(\d+))?/);return m?
 // Positions in fixed fill order. x: -1 port … +1 starboard, back: 0 at transom … 1 farthest.
 const POS=[['Shotgun (center)',0,.95],['Short corner (port)',-.22,.28],['Short corner (starboard)',.22,.28],['Long rigger (port)',-.95,.82],
  ['Long rigger (starboard)',.95,.82],['Short rigger (port)',-.7,.55],['Short rigger (starboard)',.7,.55],['Flat line (starboard)',.5,.06]];
-function build(fish,n){const tag=FISH[fish],pool=L.map(l=>({l,s:spd(l),d:dep(l),z:len(l),sp:(l.target_species||[]).includes(tag)})).filter(x=>x.s&&x.d!=null);
- // Rule 1: common speed = integer knot covered by the most lures; ties -> more species-named lures -> lower speed.
- let best=null;for(let k=1;k<=25;k++){const c=pool.filter(x=>x.s[0]<=k&&k<=x.s[1]);if(!c.length)continue;
-  const sc=[Math.min(c.length,n),c.filter(x=>x.sp).length,c.length];
-  if(!best||sc[0]>best.sc[0]||(sc[0]==best.sc[0]&&(sc[1]>best.sc[1]||(sc[1]==best.sc[1]&&sc[2]>best.sc[2]))))best={k,c,sc};}
- const c=best.c,lo=Math.max(...c.map(x=>x.s[0])),hi=Math.min(...c.map(x=>x.s[1]));
+const SR=L.map(spd).filter(Boolean),SMIN=Math.min(...SR.map(r=>r[0])),SMAX=Math.max(...SR.map(r=>r[1]));
+function build(fish,n,k){const tag=FISH[fish],pool=L.map(l=>({l,s:spd(l),d:dep(l),z:len(l),sp:(l.target_species||[]).includes(tag)})).filter(x=>x.s&&x.d!=null);
+ // Rule 1: only lures whose Nomad trolling range includes the chosen speed k.
+ const c=pool.filter(x=>x.s[0]<=k&&k<=x.s[1]);if(!c.length)return {k,rods:[],count:0};
  // Rule 2: species-named lures first, then pick to spread running depth (alternate deepest/shallowest remaining), sizes as tie-break.
  const named=c.filter(x=>x.sp),other=c.filter(x=>!x.sp),order=[];
  for(const grp of [named,other]){const g=[...grp].sort((a,b)=>b.d-a.d||b.z-a.z);let t=1;while(g.length){order.push(t?g.shift():g.pop());t^=1;}}
@@ -23,11 +21,11 @@ function build(fish,n){const tag=FISH[fish],pool=L.map(l=>({l,s:spd(l),d:dep(l),
  const used=new Set(),rods=pos.map((q,j)=>{const x=picks[j];
   // Rule 5 (neutral, not a performance claim): first color in Nomad's list not yet used in this spread.
   const col=x.l.colors.find(c=>!used.has(c))||x.l.colors[j%x.l.colors.length];used.add(col);
-  const why=[`Runs ${x.l.running_depth}, ${x.l.length}`,`troll range ${x.s[0]}–${x.s[1]} kn covers the ${lo}–${hi} kn common window`,
+  const why=[`Runs ${x.l.running_depth}, ${x.l.length}`,`troll range ${x.s[0]}–${x.s[1]} kn includes your ${k} kn`,
    x.sp?`Nomad's page names ${tag}`:`Nomad's page does not name ${tag} (filler: no species-named lure left at this speed)`,
    x.d>=30?'deep runner kept close to the boat':x.d<=5?'shallow runner set farther back':'mid-depth runner'];
   return {i:q.i,pos:q.p,l:x.l,col,why:why.join('; ')+'.',sp:x.sp}}).sort((a,b)=>a.i-b.i);
- return {lo,hi,rods}}
+ return {k,rods,count:c.length}}
 // Stylized top-down boat + animated spread. Tiers: 1-2 center console, 3 sportfisher, 4-6 large sportfisher + outriggers, 7-8 game boat + tower.
 const RM=matchMedia('(prefers-reduced-motion: reduce)');
 function hull(cx,y,L,W){const r=W/2;return `M${cx},${y} C${cx+r*.9},${y+L*.18} ${cx+r},${y+L*.45} ${cx+r},${y+L*.62} L${cx+r*.92},${y+L} L${cx-r*.92},${y+L} L${cx-r},${y+L*.62} C${cx-r},${y+L*.45} ${cx-r*.9},${y+L*.18} ${cx},${y}Z`}
@@ -71,12 +69,13 @@ for(let i=1;i<=8;i++)$('#s-rods').insertAdjacentHTML('beforeend',`<option${i==4?
 const rigLine=l=>{const r=R[l.id]||{},bits=[`Hooks: ${l.hooks_rings||'Not listed by Nomad'}`];
  bits.push(r.split_rings?'Heavy-duty split rings (per Nomad)':'Split rings: Not listed by Nomad');bits.push('Leader: '+(r.leader?'see Nomad note':'Not listed by Nomad'));
  return esc(bits.join(' · '))+` · <a href="${esc(l.product_url)}" target="_blank" rel="noopener">source</a>`};
-function run(){const fish=$('#s-fish').value,n=+$('#s-rods').value,o=build(fish,n);window.lastSpread=o;
+function run(){const fish=$('#s-fish').value,n=+$('#s-rods').value,k=+$('#s-speed').value,o=build(fish,n,k);window.lastSpread=o;$('#s-speed-val').textContent=k+' kn';
+ if(!o.rods.length){$('#spread-out').innerHTML=`<p class="eyebrow">Suggested starting spread, rule of thumb from Nomad specs, not Nomad advice</p><h3 class="sp-h">No Nomad lure in this demo is rated for ${k} kn</h3><p class="muted">Trolling ranges in this demo run from ${SMIN} to ${SMAX} kn. Try another speed.</p>`;return}
  $('#spread-out').innerHTML=`<p class="eyebrow">Suggested starting spread, rule of thumb from Nomad specs, not Nomad advice</p>
- <h3 class="sp-h">${n} rod${n>1?'s':''} · ${esc(fish)} · ${o.lo}–${o.hi} kn</h3>
+ <h3 class="sp-h">${n} rod${n>1?'s':''} · ${esc(fish)} · ${k} kn · ${o.count} of ${L.length} lures rated for this speed</h3>
  <div class="sp-grid">${boat(o.rods)}<ol class="rods">${o.rods.map(r=>`<li><div class="rod-pos">${esc(r.pos[0])}</div>
  <button class="rod-lure" data-id="${r.l.id}">${esc(r.l.model)}</button> <span class="chip">${esc(r.col)}</span>
  <p class="muted">${esc(r.why)}</p><p class="rig">${rigLine(r.l)}</p></li>`).join('')}</ol></div>
  <p class="muted small">Colors: neutral rule (first color in Nomad's list not already used in this spread), not a claim about what works.</p>`;
  document.querySelectorAll('.rod-lure').forEach(b=>b.onclick=()=>window.openLure(b.dataset.id));}
-$('#s-fish').onchange=$('#s-rods').onchange=run;window.buildSpread=build;run();})();
+$('#s-fish').onchange=$('#s-rods').onchange=run;$('#s-speed').oninput=run;window.buildSpread=build;run();})();
