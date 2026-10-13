@@ -2,14 +2,8 @@
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const v=x=>x==null?'<span class="null">Not listed</span>':esc(x);
 $('#fdate').textContent=D.fetched_date;
-const FISH={'Bluefin tuna':'Tuna','Yellowfin tuna':'Tuna','Wahoo':'Wahoo'};
-Object.keys(FISH).forEach(s=>$('#f-species').insertAdjacentHTML('beforeend',`<option>${esc(s)}</option>`));
-const speeds=[...new Set(L.map(l=>l.max_trolling_speed_kn).filter(x=>x!=null))].sort((a,b)=>a-b);
-speeds.forEach(s=>$('#f-speed').insertAdjacentHTML('beforeend',`<option value="${s}">${s} kn max or faster</option>`));
 const price=l=>l.price==null?null:`$${l.price.toFixed(2)} ${l.currency}`;
-function render(){const sp=$('#f-species').value,min=parseFloat($('#f-speed').value)||0;
- const r=L.filter(l=>(!sp||(l.target_species||[]).includes(FISH[sp]))&&(!min||(l.max_trolling_speed_kn||0)>=min));
- $('#count').textContent=`${r.length} of ${L.length} lures`;
+function render(){const r=L;
  $('#grid').innerHTML=r.map(l=>`<button class="card" data-id="${l.id}"><div class="img">${l.image_url?`<img loading="lazy" src="${esc(l.image_url)}&width=600" alt="">`:''}</div>
  <div class="body"><h3>${esc(l.model)}</h3><div class="meta">${v(l.length)} · ${v(l.weight)} · ${l.colors.length} colors</div>
  ${l.max_trolling_speed_kn!=null?`<span class="pill">Up to ${l.max_trolling_speed_kn} kn</span>`:''}</div></button>`).join('');
@@ -25,4 +19,4 @@ function open(id){const l=L.find(x=>x.id===id);
  $('#detail').hidden=false;document.body.style.overflow='hidden';}
 function close(){$('#detail').hidden=true;document.body.style.overflow='';}
 $('.close').onclick=close;$('#detail').onclick=e=>{if(e.target.id==='detail')close()};document.onkeydown=e=>{if(e.key==='Escape')close()};
-$('#f-species').onchange=$('#f-speed').onchange=render;render();window.openLure=open;const m=location.hash.match(/^#lure=(.+)/);if(m)open(decodeURIComponent(m[1]));})();
+render();window.openLure=open;const m=location.hash.match(/^#lure=(.+)/);if(m)open(decodeURIComponent(m[1]));})();
