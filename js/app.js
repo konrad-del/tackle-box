@@ -2,13 +2,13 @@
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const v=x=>x==null?'<span class="null">Not listed</span>':esc(x);
 $('#fdate').textContent=D.fetched_date;
-const species=[...new Set(L.flatMap(l=>l.target_species||[]))].sort();
-species.forEach(s=>$('#f-species').insertAdjacentHTML('beforeend',`<option>${esc(s)}</option>`));
+const FISH={'Bluefin tuna':'Tuna','Yellowfin tuna':'Tuna','Wahoo':'Wahoo'};
+Object.keys(FISH).forEach(s=>$('#f-species').insertAdjacentHTML('beforeend',`<option>${esc(s)}</option>`));
 const speeds=[...new Set(L.map(l=>l.max_trolling_speed_kn).filter(x=>x!=null))].sort((a,b)=>a-b);
 speeds.forEach(s=>$('#f-speed').insertAdjacentHTML('beforeend',`<option value="${s}">${s} kn max or faster</option>`));
 const price=l=>l.price==null?null:`$${l.price.toFixed(2)} ${l.currency}`;
 function render(){const sp=$('#f-species').value,min=parseFloat($('#f-speed').value)||0;
- const r=L.filter(l=>(!sp||(l.target_species||[]).includes(sp))&&(!min||(l.max_trolling_speed_kn||0)>=min));
+ const r=L.filter(l=>(!sp||(l.target_species||[]).includes(FISH[sp]))&&(!min||(l.max_trolling_speed_kn||0)>=min));
  $('#count').textContent=`${r.length} of ${L.length} lures`;
  $('#grid').innerHTML=r.map(l=>`<button class="card" data-id="${l.id}"><div class="img">${l.image_url?`<img loading="lazy" src="${esc(l.image_url)}&width=600" alt="">`:''}</div>
  <div class="body"><h3>${esc(l.model)}</h3><div class="meta">${v(l.length)} · ${v(l.weight)} · ${l.colors.length} colors</div>
