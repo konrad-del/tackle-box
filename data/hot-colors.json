@@ -1,0 +1,4 @@
+{
+  "_doc": "Hand-counted from Nomad Design catch posts. Intentionally EMPTY until counted by hand. Each entry shape: {\"lure\": \"model id from lures.json\", \"color\": \"color name exactly as on nomadtackle.com\", \"species\": \"species shown in the post\", \"post_date\": \"YYYY-MM-DD\", \"post_url\": \"https://...\"}",
+  "entries": []
+}
